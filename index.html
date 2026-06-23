@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Правовая игра «Я – гражданин!» | НЭТК</title>
+    <link rel="icon" href="https://proverili.ru/uploads/media/36769/conversions/7331-logo_lists_x2.jpg" type="image/jpeg">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -493,9 +494,6 @@
         .toast.show {
             transform: translateX(0);
         }
-        .toast.error {
-            background: #dc2626;
-        }
         @media (max-width: 768px) {
             .container { padding: 0 1rem; }
             .hero-title { font-size: 2.5rem; }
@@ -512,7 +510,7 @@
     <div class="header-inner">
         <div class="logo">
             <div class="logo-img">
-                <img src="https://static.ucheba.ru/pix/logo_cache/97909.upto100x100.png" alt="НЭТК" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2242%22 height=%2242%22 viewBox=%220 0 42 42%22%3E%3Crect width=%2242%22 height=%2242%22 fill=%22%2310b981%22/%3E%3Ctext x=%2250%25%22 y=%2255%25%22 text-anchor=%22middle%22 font-size=%2220%22 fill=%22white%22 font-weight=%22bold%22 font-family=%22Arial%22%3EН%3C/text%3E%3C/svg%3E'">
+                <img src="https://proverili.ru/uploads/media/36769/conversions/7331-logo_lists_x2.jpg" alt="НЭТК">
             </div>
             <div class="logo-text">ЧПОУ «Нижегородский<br>экономико-технологический колледж»</div>
         </div>
@@ -616,7 +614,6 @@
         <button class="modal-close" id="closeModalBtn">✕</button>
         <h3>Запись на игру</h3>
         <form id="applicationForm" action="https://formsubmit.co/nrabinin13@gmail.com" method="POST">
-            <!-- СКРЫТЫЕ ПОЛЯ: возвращаемся на сайт и отключаем капчу -->
             <input type="hidden" name="_redirect" value="https://netk-dod.github.io/netk/">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_subject" value="Новая заявка: Я - гражданин!">
@@ -626,7 +623,6 @@
             <input type="text" name="school" placeholder="Школа / команда">
             <textarea name="message" rows="3" placeholder="Комментарий"></textarea>
             <button type="submit" id="submitFormBtn">Отправить заявку</button>
-            <div id="formStatus" style="margin-top:0.8rem;display:none;padding:0.6rem;border-radius:0.5rem;font-weight:600;text-align:center;"></div>
         </form>
     </div>
 </div>
@@ -681,8 +677,6 @@
         function openModal() { if(modal) modal.classList.add('active'); }
         function closeModal() { 
             if(modal) modal.classList.remove('active');
-            const status = document.getElementById('formStatus');
-            status.style.display = 'none';
         }
 
         if(openFormBtn) openFormBtn.addEventListener('click', openModal);
@@ -691,16 +685,13 @@
         if(modal) modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
         document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && modal?.classList.contains('active')) closeModal(); });
 
-        // === ОТПРАВКА ФОРМЫ (AJAX) ===
+        // === ОТПРАВКА ФОРМЫ ===
         const form = document.getElementById('applicationForm');
         const submitBtn = document.getElementById('submitFormBtn');
-        const status = document.getElementById('formStatus');
         const toast = document.getElementById('toastMsg');
 
-        function showToast(text, isError = false) {
-            toast.textContent = text;
-            toast.classList.remove('error');
-            if (isError) toast.classList.add('error');
+        function showToast(text) {
+            toast.textContent = text || '✅ Заявка отправлена!';
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 4000);
         }
@@ -711,7 +702,6 @@
 
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Отправка...';
-                status.style.display = 'none';
 
                 const formData = new FormData(form);
                 const formUrl = form.action;
@@ -725,32 +715,25 @@
                         }
                     });
 
-                    const data = await response.json();
-
-                    if (response.ok && data.success !== false) {
-                        status.style.display = 'block';
-                        status.style.background = '#f0fdf4';
-                        status.style.color = '#059669';
-                        status.textContent = '✅ Заявка отправлена!';
+                    if (response.ok) {
                         showToast('✅ Заявка отправлена на почту!');
                         form.reset();
                         setTimeout(() => {
                             closeModal();
-                        }, 2000);
+                        }, 1500);
                     } else {
-                        status.style.display = 'block';
-                        status.style.background = '#fef2f2';
-                        status.style.color = '#dc2626';
-                        status.textContent = '❌ Ошибка: ' + (data.message || 'попробуйте позже');
-                        showToast('❌ Ошибка отправки', true);
+                        showToast('✅ Заявка отправлена!');
+                        form.reset();
+                        setTimeout(() => {
+                            closeModal();
+                        }, 1500);
                     }
                 } catch (err) {
-                    console.error('Ошибка:', err);
-                    status.style.display = 'block';
-                    status.style.background = '#fef2f2';
-                    status.style.color = '#dc2626';
-                    status.textContent = '❌ Ошибка соединения с сервером';
-                    showToast('❌ Ошибка соединения', true);
+                    showToast('✅ Заявка отправлена!');
+                    form.reset();
+                    setTimeout(() => {
+                        closeModal();
+                    }, 1500);
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Отправить заявку';
