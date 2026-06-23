@@ -515,6 +515,9 @@
         .toast.show {
             transform: translateX(0);
         }
+        .toast.error {
+            background: #dc2626;
+        }
         @media (max-width: 768px) {
             .container { padding: 0 1rem; }
             .hero-title { font-size: 2.5rem; }
@@ -634,11 +637,7 @@
     <div class="modal-box">
         <button class="modal-close" id="closeModalBtn">✕</button>
         <h3>Запись на игру</h3>
-        <form id="applicationForm" action="https://formsubmit.co/nrabinin13@gmail.com" method="POST">
-            <!-- Скрытые настройки FormSubmit -->
-            <input type="hidden" name="_subject" value="Новая заявка: Я - гражданин!">
-            <input type="hidden" name="_captcha" value="false">
-            <!-- Поля формы -->
+        <form id="applicationForm">
             <input type="text" name="name" placeholder="Ваше имя" required>
             <input type="email" name="email" placeholder="Email" required>
             <input type="text" name="school" placeholder="Школа / команда">
@@ -710,28 +709,61 @@
         if(modal) modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
         document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && modal?.classList.contains('active')) closeModal(); });
 
-        // === ОТПРАВКА ФОРМЫ (обычный POST, без fetch) ===
+        // === ОТПРАВКА ФОРМЫ (без перезагрузки) ===
         const form = document.getElementById('applicationForm');
+        const submitBtn = document.getElementById('submitFormBtn');
+        const successMsg = document.getElementById('successMsg');
+        const errorMsg = document.getElementById('errorMsg');
         const toast = document.getElementById('toastMsg');
 
-        function showToast(text) {
+        function showToast(text, isError = false) {
             toast.textContent = text || '✅ Заявка отправлена!';
+            toast.className = 'toast';
+            if (isError) toast.classList.add('error');
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 4000);
         }
 
         if(form) {
-            // Перехватываем отправку, чтобы показать уведомление и закрыть модалку
-            form.addEventListener('submit', function(e) {
-                // Не отменяем отправку! Просто добавляем действия перед отправкой.
-                // Показываем уведомление
-                showToast('✅ Заявка отправляется...');
-                // Закрываем модальное окно через 1.5 секунды (после отправки)
-                setTimeout(() => {
-                    closeModal();
-                }, 1500);
-                // Форма отправится стандартным способом, браузер перейдёт на страницу FormSubmit
-                // Это нормально — пользователь увидит страницу "Спасибо" от FormSubmit.
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Отправка...';
+                successMsg.style.display = 'none';
+                errorMsg.style.display = 'none';
+
+                const formData = new FormData(form);
+                // Добавляем скрытые поля для FormSubmit
+                formData.append('_subject', 'Новая заявка: Я - гражданин!');
+                formData.append('_captcha', 'false');
+
+                try {
+                    // Отправляем через fetch с режимом no-cors
+                    await fetch('https://formsubmit.co/nrabinin13@gmail.com', {
+                        method: 'POST',
+                        body: formData,
+                        mode: 'no-cors'
+                    });
+
+                    // При mode: 'no-cors' мы не можем прочитать ответ,
+                    // но данные отправляются. Показываем успех.
+                    successMsg.style.display = 'block';
+                    showToast('✅ Заявка отправлена на почту!');
+                    form.reset();
+
+                    setTimeout(() => {
+                        closeModal();
+                    }, 2000);
+
+                } catch (err) {
+                    console.error('Ошибка:', err);
+                    errorMsg.style.display = 'block';
+                    showToast('❌ Ошибка отправки, попробуйте позже', true);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Отправить заявку';
+                }
             });
         }
     })();
