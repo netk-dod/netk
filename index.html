@@ -476,28 +476,6 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
-        .success-msg {
-            text-align: center;
-            color: #059669;
-            font-weight: 600;
-            margin-top: 0.8rem;
-            display: none;
-            padding: 0.6rem;
-            background: #f0fdf4;
-            border-radius: 0.5rem;
-            font-size: 0.9rem;
-        }
-        .error-msg {
-            text-align: center;
-            color: #dc2626;
-            font-weight: 600;
-            margin-top: 0.8rem;
-            display: none;
-            padding: 0.6rem;
-            background: #fef2f2;
-            border-radius: 0.5rem;
-            font-size: 0.9rem;
-        }
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -526,10 +504,6 @@
             .block-title { font-size: 1.5rem; }
             .modal-box { padding: 1.8rem; }
         }
-        /* Стиль для iframe-страницы благодарности (скрываем её) */
-        .form-submit-redirect {
-            display: none !important;
-        }
     </style>
 </head>
 <body>
@@ -538,7 +512,7 @@
     <div class="header-inner">
         <div class="logo">
             <div class="logo-img">
-                <img src="https://yandex.ru/images/search?pos=0&text=нэтк+арзамас&img_url=https%3A%2F%2Fproverili.ru%2Fuploads%2Fmedia%2F36769%2Fconversions%2F7331-logo_lists_x2.jpg&rpt=simage&lr=11080&source=serp">
+                <img src="https://static.ucheba.ru/pix/logo_cache/97909.upto100x100.png" alt="НЭТК" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2242%22 height=%2242%22 viewBox=%220 0 42 42%22%3E%3Crect width=%2242%22 height=%2242%22 fill=%22%2310b981%22/%3E%3Ctext x=%2250%25%22 y=%2255%25%22 text-anchor=%22middle%22 font-size=%2220%22 fill=%22white%22 font-weight=%22bold%22 font-family=%22Arial%22%3EН%3C/text%3E%3C/svg%3E'">
             </div>
             <div class="logo-text">ЧПОУ «Нижегородский<br>экономико-технологический колледж»</div>
         </div>
@@ -641,9 +615,9 @@
     <div class="modal-box">
         <button class="modal-close" id="closeModalBtn">✕</button>
         <h3>Запись на игру</h3>
-        <form id="applicationForm" action="https://formsubmit.co/nrabinin13@gmail.com" method="POST" target="_blank">
-            <!-- ОТКЛЮЧАЕМ ПЕРЕНАПРАВЛЕНИЕ: форма остаётся на странице -->
-            <input type="hidden" name="_redirect" value="https://https://netk-dod.github.io/netk/">
+        <form id="applicationForm" action="https://formsubmit.co/nrabinin13@gmail.com" method="POST">
+            <!-- СКРЫТЫЕ ПОЛЯ: возвращаемся на сайт и отключаем капчу -->
+            <input type="hidden" name="_redirect" value="https://ваш-сайт.github.io">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_subject" value="Новая заявка: Я - гражданин!">
             
@@ -652,8 +626,7 @@
             <input type="text" name="school" placeholder="Школа / команда">
             <textarea name="message" rows="3" placeholder="Комментарий"></textarea>
             <button type="submit" id="submitFormBtn">Отправить заявку</button>
-            <div class="success-msg" id="successMsg">✓ Заявка отправлена!</div>
-            <div class="error-msg" id="errorMsg">⚠ Ошибка, попробуйте позже</div>
+            <div id="formStatus" style="margin-top:0.8rem;display:none;padding:0.6rem;border-radius:0.5rem;font-weight:600;text-align:center;"></div>
         </form>
     </div>
 </div>
@@ -708,8 +681,8 @@
         function openModal() { if(modal) modal.classList.add('active'); }
         function closeModal() { 
             if(modal) modal.classList.remove('active');
-            document.getElementById('successMsg').style.display = 'none';
-            document.getElementById('errorMsg').style.display = 'none';
+            const status = document.getElementById('formStatus');
+            status.style.display = 'none';
         }
 
         if(openFormBtn) openFormBtn.addEventListener('click', openModal);
@@ -718,15 +691,14 @@
         if(modal) modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
         document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && modal?.classList.contains('active')) closeModal(); });
 
-        // === ОТПРАВКА ФОРМЫ (без перезагрузки) ===
+        // === ОТПРАВКА ФОРМЫ (AJAX) ===
         const form = document.getElementById('applicationForm');
         const submitBtn = document.getElementById('submitFormBtn');
-        const successMsg = document.getElementById('successMsg');
-        const errorMsg = document.getElementById('errorMsg');
+        const status = document.getElementById('formStatus');
         const toast = document.getElementById('toastMsg');
 
         function showToast(text, isError = false) {
-            toast.textContent = text || '✅ Заявка отправлена!';
+            toast.textContent = text;
             toast.classList.remove('error');
             if (isError) toast.classList.add('error');
             toast.classList.add('show');
@@ -739,8 +711,7 @@
 
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Отправка...';
-                successMsg.style.display = 'none';
-                errorMsg.style.display = 'none';
+                status.style.display = 'none';
 
                 const formData = new FormData(form);
                 const formUrl = form.action;
@@ -757,20 +728,29 @@
                     const data = await response.json();
 
                     if (response.ok && data.success !== false) {
-                        successMsg.style.display = 'block';
+                        status.style.display = 'block';
+                        status.style.background = '#f0fdf4';
+                        status.style.color = '#059669';
+                        status.textContent = '✅ Заявка отправлена!';
                         showToast('✅ Заявка отправлена на почту!');
                         form.reset();
                         setTimeout(() => {
                             closeModal();
                         }, 2000);
                     } else {
-                        errorMsg.style.display = 'block';
-                        showToast('❌ Ошибка: ' + (data.message || 'попробуйте позже'), true);
+                        status.style.display = 'block';
+                        status.style.background = '#fef2f2';
+                        status.style.color = '#dc2626';
+                        status.textContent = '❌ Ошибка: ' + (data.message || 'попробуйте позже');
+                        showToast('❌ Ошибка отправки', true);
                     }
                 } catch (err) {
                     console.error('Ошибка:', err);
-                    errorMsg.style.display = 'block';
-                    showToast('❌ Ошибка соединения с сервером', true);
+                    status.style.display = 'block';
+                    status.style.background = '#fef2f2';
+                    status.style.color = '#dc2626';
+                    status.textContent = '❌ Ошибка соединения с сервером';
+                    showToast('❌ Ошибка соединения', true);
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Отправить заявку';
