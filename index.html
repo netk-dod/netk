@@ -631,13 +631,12 @@
 
 <script>
     (function() {
-        // GSAP анимации
         gsap.registerPlugin(ScrollTrigger);
         document.querySelectorAll('.card, .block, .footer').forEach(el => {
             gsap.fromTo(el, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.8, scrollTrigger: { trigger: el, start: 'top 85%' } });
         });
 
-        // Соцсети
+
         document.querySelectorAll('.social-btn').forEach(btn => btn.addEventListener('click', () => window.open(btn.dataset.link, '_blank')));
         const socialTrigger = document.getElementById('socialTrigger');
         const socialList = document.getElementById('socialList');
@@ -647,7 +646,7 @@
             arrowIcon.textContent = socialList.classList.contains('open') ? '▶' : '◀';
         });
 
-        // Навигация
+
         document.querySelectorAll('[data-scroll]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const targetId = btn.getAttribute('data-scroll');
@@ -656,7 +655,7 @@
             });
         });
 
-        // Вкладки
+
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const tabId = btn.getAttribute('data-tab');
@@ -668,7 +667,7 @@
             });
         });
 
-        // Модальное окно
+
         const modal = document.getElementById('modal');
         const openFormBtn = document.getElementById('openFormBtn');
         const footerWriteBtn = document.getElementById('footerWriteBtn');
@@ -685,7 +684,7 @@
         if(modal) modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
         document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && modal?.classList.contains('active')) closeModal(); });
 
-        // === ОТПРАВКА ФОРМЫ ===
+
         const form = document.getElementById('applicationForm');
         const submitBtn = document.getElementById('submitFormBtn');
         const toast = document.getElementById('toastMsg');
